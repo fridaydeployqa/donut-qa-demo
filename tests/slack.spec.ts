@@ -1,4 +1,8 @@
 import { test, expect } from '@playwright/test';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 test('send message to Slack channel', async ({ page }) => {
   // Get environment variables
@@ -9,7 +13,12 @@ test('send message to Slack channel', async ({ page }) => {
 
   // Verify environment variables are set
   if (!workspaceUrl || !email || !password || !channel) {
-    throw new Error('Required environment variables are not set');
+    console.error('Missing environment variables:');
+    console.error('SLACK_WORKSPACE_URL:', workspaceUrl ? '✓' : '✗');
+    console.error('SLACK_EMAIL:', email ? '✓' : '✗');
+    console.error('SLACK_PASSWORD:', password ? '✓' : '✗');
+    console.error('SLACK_CHANNEL:', channel ? '✓' : '✗');
+    throw new Error('Required environment variables are not set. Please check your .env file');
   }
 
   // Configure longer timeout for Slack operations
