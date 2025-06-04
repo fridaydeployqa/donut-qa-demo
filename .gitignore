@@ -5,4 +5,6 @@ node_modules/
 /playwright/.cache/
 .DS_Store
 *.code-workspace
-.env 
+.env
+*.png
+test-results/ 
