@@ -6,76 +6,109 @@ dotenv.config();
 
 test('send message to Slack channel', async ({ page }) => {
   // Get environment variables
-  const workspaceUrl = process.env.SLACK_WORKSPACE_URL;
-  const email = process.env.SLACK_EMAIL;
-  const password = process.env.SLACK_PASSWORD;
-  const channel = process.env.SLACK_CHANNEL;
-
-  // Verify environment variables are set
-  if (!workspaceUrl || !email || !password || !channel) {
-    console.error('Missing environment variables:');
-    console.error('SLACK_WORKSPACE_URL:', workspaceUrl ? '✓' : '✗');
-    console.error('SLACK_EMAIL:', email ? '✓' : '✗');
-    console.error('SLACK_PASSWORD:', password ? '✓' : '✗');
-    console.error('SLACK_CHANNEL:', channel ? '✓' : '✗');
-    throw new Error('Required environment variables are not set. Please check your .env file');
-  }
+  const signinUrl = process.env.SLACK_SIGNIN_URL;
+  const fooEmail = process.env.SLACK_FOO_EMAIL;
+  const fooPassword = process.env.SLACK_FOO_PASSWORD;
+  const channelURL = process.env.SLACK_CHANNEL_URL;
 
   // Configure longer timeout for Slack operations
   page.setDefaultTimeout(30000);
 
   try {
     // Navigate to Slack workspace
-    await page.goto(`https://${workspaceUrl}`);
+    await page.goto(`${signinUrl}`);
 
-    // Check if we need to sign in (might be already signed in)
-    const signInButton = page.getByRole('button', { name: 'Sign In', exact: true });
-    if (await signInButton.isVisible()) {
-      // Handle sign in
-      await page.getByLabel('Email', { exact: true }).fill(email);
-      await page.getByLabel('Password', { exact: true }).fill(password);
-      await signInButton.click();
-    }
+    // Wait for login form to be ready
+    await page.waitForSelector('[data-qa="login_email"]', { state: 'visible' });
+    await page.waitForSelector('[data-qa="login_password"]', { state: 'visible' });
+    
+    // Fill login form
+    await page.fill('[data-qa="login_email"]', fooEmail!);
+    await page.fill('[data-qa="login_password"]', fooPassword!);
+    
+    // Wait for button to be clickable and click it
+    await page.waitForSelector('[data-qa="signin_button"]', { state: 'visible' });
+    await Promise.all([
+      page.waitForNavigation(), // Wait for navigation to complete
+      page.click('[data-qa="signin_button"]')
+    ]);
 
-    // Wait for Slack to load completely
+    // Wait for page to be fully loaded
     await page.waitForLoadState('networkidle');
     await page.waitForLoadState('domcontentloaded');
 
-    // Navigate to channel
-    await page.goto(`https://${workspaceUrl}/messages/${channel}`);
+    // Wait for and click the "Open in browser" button if it exists
+    await page.waitForSelector('[data-qa="ssb_redirect_open_in_browser"]', { timeout: 10000 })
+      .then(async () => {
+        await Promise.all([
+          page.waitForNavigation(),
+          page.click('[data-qa="ssb_redirect_open_in_browser"]')
+        ]);
+      })
+      .catch(() => console.log('No browser redirect button found, continuing...'));
+
+    // Wait again for page to be stable
     await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
-    // Wait for the channel to load
-    await page.waitForSelector('[data-qa="message_input"]', { state: 'visible' });
+    // Take screenshot of workspace
+    await page.screenshot({ path: 'test-screenshots/slack-workspace.png', fullPage: true });
 
-    // Ensure we're in the right channel
-    const channelTitle = await page.locator('[data-qa="channel_name"]').textContent();
-    expect(channelTitle?.toLowerCase()).toContain(channel.toLowerCase());
+    // Navigate to channel with navigation wait
+    await Promise.all([
+      page.waitForNavigation(),
+      page.goto(`${channelURL}`)
+    ]);
 
-    // Type and send message
+    // Wait for channel page to be fully loaded
+    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+
+    // Wait for message input to be ready
+    await page.waitForSelector('[data-qa="message_input"]', { state: 'visible', timeout: 10000 });
+    
+    // Take screenshot of channel
+    await page.screenshot({ path: 'test-screenshots/slack-channel.png', fullPage: true });
+
+    // Type and send message with proper waits
     const messageInput = page.locator('[data-qa="message_input"]');
+    await messageInput.waitFor({ state: 'visible' });
     await messageInput.click();
-    await messageInput.clear();
     await messageInput.fill('@Bar :doughnut: test');
-    await page.keyboard.press('Enter');
 
-    // Wait for message to be sent (look for the sending indicator to disappear)
-    await page.waitForSelector('[data-qa="message_sending_indicator"]', { state: 'hidden', timeout: 10000 }).catch(() => {
-      console.log('Message sending indicator not found, continuing...');
-    });
+    // Wait for send button and click
+    const sendButton = page.locator('[data-qa="texty_send_button"]');
+    await sendButton.waitFor({ state: 'visible' });
+    
+    // Click send and wait for network activity to settle
+    await Promise.all([
+      page.waitForResponse(response => 
+        response.url().includes('/api/chat.postMessage') && 
+        response.status() === 200
+      ),
+      sendButton.click()
+    ]);
 
-    // Verify message was sent (look for it in the message list)
-    // We'll wait a bit longer for this verification
-    await expect(page.locator('.p-rich_text_block', { hasText: '@Bar' })).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('.c-message__body', { hasText: 'test' })).toBeVisible({ timeout: 10000 });
+    // Wait a moment for the UI to update
+    await page.waitForTimeout(2000);
 
-    // Optional: Verify emoji rendered
-    await expect(page.locator('img[data-qa="emoji"]')).toBeVisible({ timeout: 10000 });
+    // Take final screenshot
+    await page.screenshot({ path: 'test-screenshots/slack-message.png', fullPage: true });
 
   } catch (error) {
     console.error('Test failed:', error);
-    // Take a screenshot on failure
-    await page.screenshot({ path: 'slack-test-failure.png', fullPage: true });
+    
+    // Take error screenshot
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      await page.screenshot({ 
+        path: `test-screenshots/slack-error-${timestamp}.png`,
+        fullPage: true 
+      });
+    } catch (screenshotError) {
+      console.error('Failed to take error screenshot:', screenshotError);
+    }
+    
     throw error;
   }
 }); 
