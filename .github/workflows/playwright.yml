@@ -11,6 +11,11 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    env:
+      SLACK_WORKSPACE_URL: ${{ secrets.SLACK_WORKSPACE_URL }}
+      SLACK_EMAIL: ${{ secrets.SLACK_EMAIL }}
+      SLACK_PASSWORD: ${{ secrets.SLACK_PASSWORD }}
+      SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
