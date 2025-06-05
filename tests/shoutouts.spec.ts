@@ -34,7 +34,7 @@ test('Bar Checks Received Shoutouts', async ({ page }) => {
   await page.screenshot({ path: 'test-screenshots/donut-shoutouts.png', fullPage: true });
 
   shoutoutsReceived = Number(await page.locator('//*[@id="shoutouts-profiles-show"]/div/div[3]/div[2]/div[2]/div[1]').innerText());
-  console.log(shoutoutsReceived);
+  // console.log(shoutoutsReceived);
 })
 
 test('Foo Sends Shoutout To Bar', async ({ page }) => {
