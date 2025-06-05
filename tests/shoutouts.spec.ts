@@ -26,7 +26,7 @@ test('Bar Checks Received Shoutouts', async ({ page }) => {
   await page.getByPlaceholder('Your password').fill(barPassword!);
   await page.getByRole('button', { name: 'Sign In', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Sign in to Donut with Slack' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign in to Donut with Slack' })).toBeVisible({ timeout: 10000 });
   await page.getByRole('button', { name: 'Accept and Continue' }).click();
 
   await page.goto('https://app.donut.ai/shoutouts/profile');
@@ -85,7 +85,7 @@ test('Bar Re-Checks Received Shoutouts', async ({ page }) => {
   await page.getByPlaceholder('Your password').fill(barPassword!);
   await page.getByRole('button', { name: 'Sign In', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Sign in to Donut with Slack' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign in to Donut with Slack' })).toBeVisible({ timeout: 10000 });
   await page.getByRole('button', { name: 'Accept and Continue' }).click();
 
   await page.goto('https://app.donut.ai/shoutouts/profile');
