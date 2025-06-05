@@ -12,10 +12,12 @@ jobs:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     env:
-      SLACK_WORKSPACE_URL: ${{ secrets.SLACK_WORKSPACE_URL }}
-      SLACK_EMAIL: ${{ secrets.SLACK_EMAIL }}
-      SLACK_PASSWORD: ${{ secrets.SLACK_PASSWORD }}
-      SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+      SLACK_SIGNIN_URL: ${{ secrets.SLACK_SIGNIN_URL }}
+      SLACK_CHANNEL_URL: ${{ secrets.SLACK_CHANNEL_URL }}
+      SLACK_FOO_EMAIL: ${{ secrets.SLACK_FOO_EMAIL }}
+      SLACK_FOO_PASSWORD: ${{ secrets.SLACK_FOO_PASSWORD }}
+      SLACK_BAR_EMAIL: ${{ secrets.SLACK_BAR_EMAIL }}
+      SLACK_BAR_PASSWORD: ${{ secrets.SLACK_BAR_PASSWORD }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -29,7 +31,7 @@ jobs:
       run: mkdir -p playwright-report
     - name: Run Playwright tests
       run: npx playwright test --reporter=html,list
-      continue-on-error: true
+      # continue-on-error: true
     - name: List report directory contents
       if: always()
       run: ls -la playwright-report/
