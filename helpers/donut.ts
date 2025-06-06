@@ -20,18 +20,20 @@ const SHOUTOUTS_COUNT_SELECTOR =
 
 export async function signIn(page: Page, { workspaceSlug, workspaceTitle, email, password }: { workspaceSlug: string; workspaceTitle: string; email: string; password: string }) {
   await page.goto(process.env.DONUT_SIGNIN_URL!);
-  await expect(page.getByRole("heading", { name: SIGN_IN_WORKSPACE_HEADING })).toBeVisible();
 
+  await expect(page.getByPlaceholder(WORKSPACE_PLACEHOLDER)).toBeVisible({ timeout: 10000 });
   await page.getByPlaceholder(WORKSPACE_PLACEHOLDER).fill(workspaceSlug);
   await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
 
-  await expect(page.getByRole("heading", { name: `Sign in to ${workspaceTitle}` })).toBeVisible();
+  await expect(page.getByRole("link", { name: SIGN_IN_PASSWORD_LINK })).toBeVisible({ timeout: 10000 });
   await page.getByRole("link", { name: SIGN_IN_PASSWORD_LINK }).click();
 
+  await expect(page.getByPlaceholder(EMAIL_PLACEHOLDER)).toBeVisible({ timeout: 10000 });
   await page.getByPlaceholder(EMAIL_PLACEHOLDER).fill(email);
   await page.getByPlaceholder(PASSWORD_PLACEHOLDER).fill(password);
   await page.getByRole("button", { name: SIGN_IN_BUTTON, exact: true }).click();
 
+  await expect(page.getByRole("button", { name: ACCEPT_CONTINUE_BUTTON })).toBeVisible({ timeout: 10000 });
   await page.getByRole("button", { name: ACCEPT_CONTINUE_BUTTON }).click();
 }
 
