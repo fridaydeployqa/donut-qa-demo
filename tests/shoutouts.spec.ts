@@ -1,88 +1,73 @@
 import { test, expect } from '@playwright/test';
 import * as dotenv from 'dotenv';
+import { signIn, countShoutouts } from "../helpers/donut";
 
 // Load environment variables from .env file
 dotenv.config();
 
+// Workspace constants
+const WORKSPACE_SLUG = 'fridaydeploy';
+const WORKSPACE_TITLE = 'Friday Deploy';
+
+// Input placeholders
+const EMAIL_PLACEHOLDER = 'name@work-email.com';
+const PASSWORD_PLACEHOLDER = 'Your password';
+
+// Button and heading text
+const SIGN_IN_BUTTON = 'Sign In';
+const LAUNCHING_HEADING = 'Launching Friday Deploy';
+const USE_SLACK_LINK = 'use Slack in your browser';
+const ACTIONS_BUTTON = 'Friday Deploy Actions';
+const CHANNEL_BUTTON = '#demo-donut-qa';
+const SEND_NOW_BUTTON = 'Send now';
+
+// Message constants
+const MESSAGE_TEXTBOX_NAME = 'Message to demo-donut-qa';
+const SHOUTOUT_MESSAGE = '@Bar :doughnut: test';
+const SHOUTOUT_TEXT = '@Bar test';
+
 test.describe.configure({ mode: 'serial' });
 
-let shoutoutsReceived: number;
+test('Give and Receive Shoutouts', async ({ page }) => {  
+  await signIn(page, {
+    workspaceSlug: WORKSPACE_SLUG,
+    workspaceTitle: WORKSPACE_TITLE,
+    email: process.env.SLACK_BAR_EMAIL!,
+    password: process.env.SLACK_BAR_PASSWORD!,
+  });
 
-test('Bar Checks Received Shoutouts', async ({ page }) => {
-  await page.goto(process.env.DONUT_SIGNIN_URL!);
-  await expect(page.getByRole('heading', { name: 'Sign in to your workspace' })).toBeVisible();
-  await page.getByPlaceholder('your-workspace').fill('fridaydeploy');
-  await page.getByRole('button', { name: 'Continue' }).click();
+  const shoutoutsReceived = await countShoutouts(page);
+
+  await page.context().clearCookies();
+
+  await page.goto(process.env.SLACK_SIGNIN_URL!);
+
+  await page.getByPlaceholder(EMAIL_PLACEHOLDER).fill(process.env.SLACK_FOO_EMAIL!);
+  await page.getByPlaceholder(PASSWORD_PLACEHOLDER).fill(process.env.SLACK_FOO_PASSWORD!);
+  await page.getByRole('button', { name: SIGN_IN_BUTTON, exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: LAUNCHING_HEADING })).toBeVisible();
+  await page.getByRole('link', { name: USE_SLACK_LINK }).click();
+
+  await expect(page.getByRole('button', { name: ACTIONS_BUTTON })).toBeVisible({ timeout: 10000 });
   
-  await expect(page.getByRole('heading', { name: 'Sign in to Friday Deploy' })).toBeVisible();
-  await page.getByRole('link', { name: 'sign in with a password instead' }).click();
+  await page.goto(process.env.SLACK_CHANNEL_URL!);
+  await expect(page.getByRole('button', { name: CHANNEL_BUTTON, exact: true })).toBeVisible();
   
-  await expect(page.getByText('Email address' )).toBeVisible();
-  await page.getByPlaceholder('name@work-email.com').fill(process.env.SLACK_BAR_EMAIL!);
-  await page.getByPlaceholder('Your password').fill(process.env.SLACK_BAR_PASSWORD!);
-  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-
-  await expect(page.getByRole('heading', { name: 'Sign in to Donut with Slack' })).toBeVisible();
-  await page.getByRole('button', { name: 'Accept and Continue' }).click();
-
-  await page.goto(process.env.DONUT_SHOUTOUTS_URL!);
-  await expect(page.locator('#shoutouts-profiles-show').getByText('My Shoutouts' )).toBeVisible();
-  await page.screenshot({ path: 'test-screenshots/donut-shoutouts.png', fullPage: true });
-
-  shoutoutsReceived = Number(await page.locator('//*[@id="shoutouts-profiles-show"]/div/div[3]/div[2]/div[2]/div[1]').innerText());
-  // console.log(shoutoutsReceived);
-})
-
-test('Foo Sends Shoutout To Bar', async ({ page }) => {
-
-  const signinUrl = process.env.SLACK_SIGNIN_URL;
-  const fooEmail = process.env.SLACK_FOO_EMAIL;
-  const fooPassword = process.env.SLACK_FOO_PASSWORD;
-  const channelURL = process.env.SLACK_CHANNEL_URL;
-
-  await page.goto(`${signinUrl}`);
-
-  await page.getByPlaceholder('name@work-email.com').fill(fooEmail!);
-  await page.getByPlaceholder('Your password').fill(fooPassword!);
-  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-
-  await expect(page.getByRole('heading', { name: 'Launching Friday Deploy' })).toBeVisible();
-  await page.getByRole('link', { name: 'use Slack in your browser' }).click();
-
-  await expect(page.getByRole('button', { name: 'Friday Deploy Actions' })).toBeVisible({ timeout: 10000 });
-  await page.screenshot({ path: 'test-screenshots/slack-workspace.png', fullPage: true });
-
-  await page.goto(`${channelURL}`);
-  await expect(page.getByRole('button', { name: '#demo-donut-qa', exact: true })).toBeVisible();
-  await page.screenshot({ path: 'test-screenshots/slack-channel.png', fullPage: true });
-
-  await page.getByRole('textbox', { name: 'Message to demo-donut-qa' }).fill('@Bar :doughnut: test');
-  await page.getByRole('button', { name: 'Send now' }).click();
+  await page.getByRole('textbox', { name: MESSAGE_TEXTBOX_NAME }).fill(SHOUTOUT_MESSAGE);
+  await page.getByRole('button', { name: SEND_NOW_BUTTON }).click();
   
-  await expect(page.getByText('@Bar test').last()).toBeVisible();
-  await page.screenshot({ path: 'test-screenshots/slack-message.png', fullPage: true });
-}); 
-
-test('Bar Re-Checks Received Shoutouts', async ({ page }) => {
-  await page.goto(process.env.DONUT_SIGNIN_URL!);
-  await expect(page.getByRole('heading', { name: 'Sign in to your workspace' })).toBeVisible();
-  await page.getByPlaceholder('your-workspace').fill('fridaydeploy');
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText(SHOUTOUT_TEXT).last()).toBeVisible();
   
-  await expect(page.getByRole('heading', { name: 'Sign in to Friday Deploy' })).toBeVisible();
-  await page.getByRole('link', { name: 'sign in with a password instead' }).click();
+  await page.context().clearCookies();
   
-  await expect(page.getByText('Email address' )).toBeVisible();
-  await page.getByPlaceholder('name@work-email.com').fill(process.env.SLACK_BAR_EMAIL!);
-  await page.getByPlaceholder('Your password').fill(process.env.SLACK_BAR_PASSWORD!);
-  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+  await signIn(page, {
+    workspaceSlug: WORKSPACE_SLUG,
+    workspaceTitle: WORKSPACE_TITLE,
+    email: process.env.SLACK_BAR_EMAIL!,
+    password: process.env.SLACK_BAR_PASSWORD!,
+  });
 
-  await expect(page.getByRole('heading', { name: 'Sign in to Donut with Slack' })).toBeVisible();
-  await page.getByRole('button', { name: 'Accept and Continue' }).click();
-
-  await page.goto(process.env.DONUT_SHOUTOUTS_URL!);
-  await expect(page.locator('#shoutouts-profiles-show').getByText('My Shoutouts' )).toBeVisible();
-  await page.screenshot({ path: 'test-screenshots/donut-shoutouts-2.png', fullPage: true });
-
-  expect(await page.locator('//*[@id="shoutouts-profiles-show"]/div/div[3]/div[2]/div[2]/div[1]').innerText()).toBe(String(++shoutoutsReceived));
-})
+  const newCount = await countShoutouts(page);
+  expect(newCount).toBe(shoutoutsReceived + 1);
+});

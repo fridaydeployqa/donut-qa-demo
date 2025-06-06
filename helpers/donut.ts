@@ -18,25 +18,14 @@ const SHOUTOUTS_PROFILES_SELECTOR = "#shoutouts-profiles-show";
 const SHOUTOUTS_COUNT_SELECTOR =
   '//*[@id="shoutouts-profiles-show"]/div/div[3]/div[2]/div[2]/div[1]';
 
-export async function signInToDonut(
-  page: Page,
-  {
-    workspace,
-    email,
-    password,
-  }: { workspace: string; email: string; password: string },
-) {
+export async function signIn(page: Page, { workspaceSlug, workspaceTitle, email, password }: { workspaceSlug: string; workspaceTitle: string; email: string; password: string }) {
   await page.goto(process.env.DONUT_SIGNIN_URL!);
-  await expect(
-    page.getByRole("heading", { name: SIGN_IN_WORKSPACE_HEADING }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: SIGN_IN_WORKSPACE_HEADING })).toBeVisible();
 
-  await page.getByPlaceholder(WORKSPACE_PLACEHOLDER).fill(workspace);
+  await page.getByPlaceholder(WORKSPACE_PLACEHOLDER).fill(workspaceSlug);
   await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
 
-  await expect(
-    page.getByRole("heading", { name: `Sign in to ${workspace}` }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: `Sign in to ${workspaceTitle}` })).toBeVisible();
   await page.getByRole("link", { name: SIGN_IN_PASSWORD_LINK }).click();
 
   await page.getByPlaceholder(EMAIL_PLACEHOLDER).fill(email);
@@ -48,9 +37,7 @@ export async function signInToDonut(
 
 export async function countShoutouts(page: Page) {
   await page.goto(process.env.DONUT_SHOUTOUTS_URL!);
-  await expect(
-    page.locator(SHOUTOUTS_PROFILES_SELECTOR).getByText(MY_SHOUTOUTS_TEXT),
-  ).toBeVisible();
+  await expect(page.locator(SHOUTOUTS_PROFILES_SELECTOR).getByText(MY_SHOUTOUTS_TEXT)).toBeVisible();
   const count = await page.locator(SHOUTOUTS_COUNT_SELECTOR).innerText();
   return Number(count);
 }
