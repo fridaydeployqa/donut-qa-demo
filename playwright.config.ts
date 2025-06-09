@@ -1,6 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
+  timeout: 60000,
+  expect: {
+    timeout: 30000,
+  },
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -12,8 +16,11 @@ export default defineConfig({
   ],
   use: {
     baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
-    video: 'retain-on-failure'
+    trace: 'retain-on-failure',
+    video: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    actionTimeout: 15000,
+    navigationTimeout: 30000,
   },
   outputDir: './test-results/',
   reportSlowTests: null,

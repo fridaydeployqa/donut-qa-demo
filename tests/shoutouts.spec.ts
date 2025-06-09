@@ -40,27 +40,28 @@ test('Give and Receive Shoutouts', async ({ page }) => {
 
   await page.context().clearCookies();
 
-  await page.goto(process.env.SLACK_SIGNIN_URL!);
+  await page.goto(process.env.SLACK_SIGNIN_URL!, { waitUntil: "domcontentloaded" });
 
+  // TODO expect
   await page.getByPlaceholder(EMAIL_PLACEHOLDER).fill(process.env.SLACK_FOO_EMAIL!);
   await page.getByPlaceholder(PASSWORD_PLACEHOLDER).fill(process.env.SLACK_FOO_PASSWORD!);
   await page.getByRole('button', { name: SIGN_IN_BUTTON, exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: LAUNCHING_HEADING })).toBeVisible();
+  await page.getByRole('heading', { name: LAUNCHING_HEADING }).waitFor({ state: 'visible' });
   await page.getByRole('link', { name: USE_SLACK_LINK }).click();
 
-  await expect(page.getByRole('button', { name: ACTIONS_BUTTON })).toBeVisible({ timeout: 10000 });
+  await page.getByRole('button', { name: ACTIONS_BUTTON }).waitFor({ state: 'visible' })
   
-  await page.goto(process.env.SLACK_CHANNEL_URL!);
-  await expect(page.getByRole('button', { name: CHANNEL_BUTTON, exact: true })).toBeVisible();
+  await page.goto(process.env.SLACK_CHANNEL_URL!, { waitUntil: "domcontentloaded" });
   
+  await page.getByRole('button', { name: CHANNEL_BUTTON, exact: true }).waitFor({ state: 'visible' });
   await page.getByRole('textbox', { name: MESSAGE_TEXTBOX_NAME }).fill(SHOUTOUT_MESSAGE);
   await page.getByRole('button', { name: SEND_NOW_BUTTON }).click();
   
-  await expect(page.getByText(SHOUTOUT_TEXT).last()).toBeVisible();
+  await page.getByText(SHOUTOUT_TEXT).last().waitFor({ state: 'visible' });
   
   await page.context().clearCookies();
-  
+
   await signIn(page, {
     workspaceSlug: WORKSPACE_SLUG,
     workspaceTitle: WORKSPACE_TITLE,
