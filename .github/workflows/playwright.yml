@@ -33,7 +33,8 @@ jobs:
       run: mkdir -p playwright-report
     - name: Run Playwright tests
       # run: npx playwright test --reporter=html,list
-      run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- npx playwright test --reporter=html,list --retries=2
+      # run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- npx playwright test --reporter=html,list --retries=2
+      run: npx playwright test --headed --reporter=html,list
       # continue-on-error: true
     - name: List report directory contents
       if: always()
