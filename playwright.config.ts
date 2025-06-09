@@ -1,12 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  timeout: 60000,
+  timeout: 120000,
   expect: {
-    timeout: 60000,
+    timeout: 30000,
   },
   testDir: './tests',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
@@ -19,8 +19,18 @@ export default defineConfig({
     trace: 'retain-on-failure',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    actionTimeout: 60000,
-    navigationTimeout: 60000,
+    actionTimeout: 30000,
+    navigationTimeout: 30000,
+    // Add these for CI stability
+    viewport: { width: 1280, height: 720 },
+    launchOptions: {
+      slowMo: process.env.CI ? 100 : 0, // Add slight delays in CI
+      args: [
+        '--disable-dev-shm-usage', // Important for CI!
+        '--no-sandbox',
+        '--disable-setuid-sandbox'
+      ]
+    }
   },
   outputDir: './test-results/',
   reportSlowTests: null,
@@ -28,7 +38,13 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { 
+        ...devices['Desktop Chrome'],
+        contextOptions: {
+          reducedMotion: 'reduce',
+          forcedColors: 'active'
+        }
+      },
     },
     // {
     //   name: 'firefox',
