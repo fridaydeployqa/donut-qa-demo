@@ -26,8 +26,6 @@ const MESSAGE_TEXTBOX_NAME = 'Message to demo-donut-qa';
 const SHOUTOUT_MESSAGE = '@Bar :doughnut: test';
 const SHOUTOUT_TEXT = '@Bar test';
 
-test.describe.configure({ mode: 'serial' });
-
 test('Give and Receive Shoutouts', async ({ page }) => {  
   await signIn(page, {
     workspaceSlug: WORKSPACE_SLUG,
