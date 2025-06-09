@@ -33,7 +33,7 @@ export async function signIn(page: Page, { workspaceSlug, workspaceTitle, email,
   await page.getByPlaceholder(PASSWORD_PLACEHOLDER).fill(password);
   await page.getByRole("button", { name: SIGN_IN_BUTTON, exact: true }).click();
 
-  await page.waitForTimeout(600000);
+  // await page.waitForTimeout(600000);
   await page.getByRole("heading", { name: "Sign in to Donut with Slack" }).waitFor({ state: 'visible' });
   await page.getByRole("button", { name: ACCEPT_CONTINUE_BUTTON }).click();
 }

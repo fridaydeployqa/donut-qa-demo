@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   timeout: 600000,
   expect: {
-    timeout: 30000,
+    timeout: 60000,
   },
   testDir: './tests',
   fullyParallel: false,
@@ -19,8 +19,8 @@ export default defineConfig({
     trace: 'retain-on-failure',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    actionTimeout: 600000,
-    navigationTimeout: 600000,
+    actionTimeout: 60000,
+    navigationTimeout: 60000,
     // Add these for CI stability
     viewport: { width: 1280, height: 720 },
     launchOptions: {
